@@ -1,5 +1,12 @@
-function openFolder(folderName) {
-  alert(folderName + " klasörü şu anda boş. İleride içeriği eklenecek!");
-  // İleride buraya yönlendirme veya alt dizin açma kodu ekleyebilirsin.
-  // Örneğin: window.location.href = folderName + "/index.html";
-}
+ // Dolu olan klasörleri burada belirle
+    const filledFolders = ["universite", "languages", "hobby"];
+    
+    function openFolder(folderName) {
+      if (filledFolders.includes(folderName)) {
+        // Klasör doluysa yönlendir
+        window.location.href = folderName + "/index.html";
+      } else {
+        // Klasör boşsa uyarı ver
+        alert(folderName + " klasörü şu anda boş. İleride içeriği eklenecek!");
+      }
+    }
