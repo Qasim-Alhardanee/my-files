@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My File Browser</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      transition: background 0.3s ease;
+    }
+
+    body.dark-mode {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    h1 {
+      color: white;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .welcome-text {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.1em;
+      margin-top: 10px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      padding: 12px 20px 12px 45px;
+      border: none;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 1em;
+      width: 250px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .search-box input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .search-box input:focus {
+      background: rgba(255, 255, 255, 0.3);
+      width: 300px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.2em;
+    }
+
+    .dark-mode-toggle {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      color: white;
+      cursor: pointer;
+      font-size: 1.2em;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dark-mode-toggle:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    .breadcrumb {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .folders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .folder-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .folder-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .folder-card:hover::before {
+      left: 100%;
+    }
+
+    .folder-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .folder-card.empty {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .folder-card.empty:hover {
+      transform: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .folder-icon {
+      font-size: 4em;
+      margin-bottom: 15px;
+      display: block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .folder-card:hover .folder-icon {
+      animation: bounce 0.6s ease;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    .folder-name {
+      font-size: 1.5em;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .folder-info {
+      font-size: 0.9em;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .folder-status {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.8em;
+      font-weight: 500;
+      margin-top: 10px;
+    }
+
+    .status-active {
+      background: #4ade80;
+      color: white;
+    }
+
+    .status-empty {
+      background: #94a3b8;
+      color: white;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      color: white;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-number {
+      font-size: 2em;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      font-size: 0.9em;
+      opacity: 0.8;
+    }
+
+    .no-results {
+      text-align: center;
+      color: white;
+      font-size: 1.5em;
+      padding: 60px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 1.8em; }
+      .folders-grid { grid-template-columns: 1fr; }
+      .search-box input { width: 200px; }
+      .search-box input:focus { width: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>
+          <span>📁</span>
+          <span>My Folder Browser</span>
+        </h1>
+        <div class="welcome-text">Welcome to my Folder collection!</div>
+      </div>
+      <div class="controls">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Search File...">
+        </div>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+          <span id="modeIcon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="breadcrumb">
+      <span>🏠</span>
+      <span>Home Page</span>
+    </div>
+
+    <div class="folders-grid" id="foldersGrid">
+      <!-- Folders will be inserted here by JavaScript -->
+    </div>
+
+    <div class="no-results" id="noResults" style="display: none;">
+      Not found file based information you gived...😢
+    </div>
+
+    <footer>
+      <p>© 2025 Folder Organization - View Only 🔒</p>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-number" id="totalFolders">0</div>
+          <div class="stat-label">Total Folders</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="activeFolders">0</div>
+          <div class="stat-label">Active Folder</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="emptyFolders">0</div>
+          <div class="stat-label">Empty Folder</div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const folders = [
+      {
+        name: "Üniversite",
+        icon: "🎓",
+        path: "university",
+        status: "active",
+        description: "12 file"
+      },
+      {
+        name: "Languages",
+        icon: "🌐",
+        path: "languages",
+        status: "active",
+        description: "8 file"
+      },
+      {
+        name: "Hobby",
+        icon: "🎨",
+        path: "hobby",
+        status: "active",
+        description: "15 File"
+      },
+      {
+        name: "Projects",
+        icon: "💻",
+        path: "Projects",
+        status: "empty",
+        description: "coming soon"
+      },
+      {
+        name: "Notes",
+        icon: "📝",
+        path: "Notes",
+        status: "empty",
+        description: "coming soon"
+      },
+      {
+        name: "photos",
+        icon: "📷",
+        path: "photos",
+        status: "empty",
+        description: "coming soon"
+      }
+    ];
+
+    function renderFolders(foldersToRender = folders) {
+      const grid = document.getElementById('foldersGrid');
+      const noResults = document.getElementById('noResults');
+      
+      if (foldersToRender.length === 0) {
+        grid.style.display = 'none';
+        noResults.style.display = 'block';
+        return;
+      }
+      
+      grid.style.display = 'grid';
+      noResults.style.display = 'none';
+      
+      grid.innerHTML = foldersToRender.map(folder => `
+        <div class="folder-card ${folder.status === 'empty' ? 'empty' : ''}" 
+             onclick="openFolder('${folder.path}', '${folder.status}')">
+          <span class="folder-icon">${folder.icon}</span>
+          <div class="folder-name">${folder.name}</div>
+          <div class="folder-info">
+            <span>📄</span>
+            <span>${folder.description}</span>
+          </div>
+          <span class="folder-status status-${folder.status}">
+            ${folder.status === 'active' ? '✓ Aktif' : '🔒 Boş'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function openFolder(folderPath, status) {
+      if (status === 'active') {
+        window.location.href = folderPath + '/index.html';
+      } else {
+        alert('Bu klasör henüz boş. İçerik coming soon eklenecek! 🚀');
+      }
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      const icon = document.getElementById('modeIcon');
+      icon.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    }
+
+    function updateStats() {
+      const total = folders.length;
+      const active = folders.filter(f => f.status === 'active').length;
+      const empty = folders.filter(f => f.status === 'empty').length;
+      
+      document.getElementById('totalFolders').textContent = total;
+      document.getElementById('activeFolders').textContent = active;
+      document.getElementById('emptyFolders').textContent = empty;
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      const filtered = folders.filter(folder => 
+        folder.name.toLowerCase().includes(searchTerm) ||
+        folder.description.toLowerCase().includes(searchTerm)
+      );
+      renderFolders(filtered);
+    });
+
+    renderFolders();
+    updateStats();
+  </script>
+</body>
+</html>
